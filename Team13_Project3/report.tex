@@ -1,0 +1,271 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,booktabs,graphicx,xcolor,hyperref}
+\usepackage[a4paper,top=21mm,bottom=22mm,left=23mm,right=23mm]{geometry}
+\DeclareMathSizes{10.95}{10}{8}{8}
+\DeclareMathSizes{10}{10}{8}{8}
+\DeclareMathSizes{9}{9}{8}{8}
+\definecolor{Blue}{HTML}{3C5488}
+\definecolor{Red}{HTML}{E64B35}
+\definecolor{Ink}{HTML}{252932}
+\hypersetup{colorlinks=true,linkcolor=Blue,urlcolor=Blue,citecolor=Blue,pdftitle={When Does the Static-Field Approximation Fail?},pdfauthor={Team 13}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt plus 1pt}
+\setlength{\belowcaptionskip}{4pt}
+\setlength{\emergencystretch}{2em}
+\newcommand{\tagline}[1]{\noindent{\color{Blue}\bfseries #1}\par\smallskip}
+\newcommand{\fig}[3]{\begin{figure}[!ht]\centering\includegraphics[width=\linewidth]{results/#1.pdf}\caption{#2}\label{#3}\end{figure}}
+\newcommand{\norm}[1]{\lVert #1\rVert_{2,h}}
+\newcommand{\phase}{\varphi}
+\newcommand{\degree}{^{\circ}}
+\newcommand{\sci}[2]{#1\mathord{\times}10^{#2}}
+\begin{document}
+\color{Ink}
+
+\thispagestyle{empty}
+\tagline{NUMERICAL ANALYSIS OF ODES AND PDES \quad / \quad PROJECT 3}
+{\color{Red}\rule{26mm}{1.2pt}}\par\vspace{7mm}
+{\Large\bfseries When Does the Static-Field Approximation Fail?\par}
+\vspace{2mm}
+{\large A verified study of transient magnetic diffusion and eddy currents in a conducting slab\par}
+\vspace{7mm}
+\tagline{TEAM 13}
+\begin{tabular}{@{}ll@{}}
+\toprule Member & Student ID \\ \midrule
+Shenghao Lin & 2363483 \\
+Davin Jonathan & 2365125 \\
+Jihong Zhuang & 2362142 \\
+Wosi Xie & 2362155 \\
+Yuhan Zhang & 2363574 \\
+\bottomrule
+\end{tabular}
+\vspace{7mm}
+
+\tagline{ABSTRACT}
+A magnetic field applied at a conductor's surface reaches the interior with a delay. We ask when a static approximation first exceeds prescribed phase and amplitude tolerances halfway into a symmetric conducting slab. The magnetoquasistatic equations reduce to a diffusion equation with a driven surface and a symmetry boundary. We derive a weighted stability estimate for the actual finite-difference boundary closure and compare forward-time central-space with Crank--Nicolson using separate spatial and temporal refinement, high-mode stress tests, and periodic time integrations. At half-depth, the first $5\degree$ phase crossing occurs at dimensionless frequency $0.23344870$, where the field still retains $99.58\%$ of the applied amplitude. The $5\%$ attenuation crossing occurs at $0.83378493$. A monotonicity argument identifies these as the first crossings. The largest frequency error among the two reported $N=80$ discretisations is $\sci{3.65}{-5}$. The thresholds apply to the ideal linear slab and the stated tolerances. Their transfer to physical samples requires phase-calibrated measurements.
+
+\vspace{6mm}
+\tagline{KEYWORDS}
+Magnetic diffusion, eddy currents, mixed boundary conditions, phase lag, finite differences.
+
+\clearpage
+\tableofcontents
+
+\clearpage
+\section{Question and continuous model}
+Static calculations treat the interior field as following the applied field immediately. In a conductor, changing magnetic flux induces current that opposes the change. This allows the field amplitude to remain close to its static value even after the phase error becomes significant. The question is when that happens and whether numerical error could reverse the order of the crossings. The project extends the heat-equation direction of the Project 3 problem pack \cite{brief}.
+
+\subsection{From Maxwell's equations to the half-slab}
+Let $x$ increase inward from the surface to the symmetry plane of a slab of thickness $2\ell$. In a right-handed frame let $\mathbf B=B(x,t)\mathbf e_z$ and $\mathbf J=J_y(x,t)\mathbf e_y$. The medium is stationary and homogeneous, with constant scalar permeability $\mu>0$ and conductivity $\sigma>0$. The magnetoquasistatic approximation neglects displacement current and propagation delay. In particular, it assumes $\omega\epsilon/\sigma\ll 1$ at the forcing frequency. Amp\`ere's law with $\mathbf H=\mathbf B/\mu$, Ohm's law and Faraday's law give \cite{haus}
+\begin{equation}
+J_y=-\frac{B_x}{\mu},\qquad E_y=-\frac{B_x}{\mu\sigma},\qquad
+B_t=-\partial_x E_y=D_mB_{xx},\qquad D_m=\frac{1}{\mu\sigma}.
+\end{equation}
+The units of $B$, $J_y$ and $D_m$ are T, A/m$^2$ and m$^2$/s, respectively. Equal prescribed forcing on the two outer faces gives a zero derivative at the symmetry plane. For amplitude $B_0>0$ and angular frequency $\omega$, the conditions are $B(0,t)=B_0\sin(\omega t)$, $B_x(\ell,t)=0$ and $B(x,0)=0$. The initial value agrees with the surface value at $t=0$. Its diffusion derivative is zero there, whereas the imposed surface time derivative is $B_0\omega$. We therefore verify formal rates on smooth compatible modes and assess forced periodic accuracy after checking that the transient has decayed.
+
+\subsection{Scaling, energy and decision rule}
+With $\xi=x/\ell$, $\tau=D_mt/\ell^2$, $b=B/B_0$ and $\Omega=\omega\ell^2/D_m$, the model is
+\begin{equation}\label{eq:ibvp}
+b_\tau=b_{\xi\xi},\quad 0<\xi<1,\qquad b(0,\tau)=\sin(\Omega\tau),\qquad
+b_\xi(1,\tau)=0,\qquad b(\xi,0)=0.
+\end{equation}
+The physical diffusion time is $\mu\sigma\ell^2$, and the skin depth is $\sqrt{2D_m/\omega}$. The magnetic energy per unit face area obeys
+\begin{equation}
+\frac{d}{dt}\int_0^\ell \frac{B^2}{2\mu}\,dx=
+\left[\frac{D_m}{\mu}BB_x\right]_0^\ell-\int_0^\ell\frac{J_y^2}{\sigma}\,dx.
+\end{equation}
+The boundary term explains why a driven field can gain energy even when the homogeneous numerical scheme is contractive. At the prescribed observation depth $\xi=1/2$, the settled static approximation is deemed outside tolerance once the lag exceeds $5\degree$ or the amplitude ratio falls below $0.95$. These thresholds are project choices. The two observables are assessed separately.
+
+\clearpage
+\section{Discretisation and analysis}
+On $N$ intervals of width $h=1/N$, let $U_j$ approximate $b(jh,\tau)$ for $1\leq j\leq N$. The surface value $U_0=g(\tau)$ is prescribed. A centred derivative at the symmetry plane gives the ghost value $U_{N+1}=U_{N-1}$. Substitution into the three-point second derivative yields $\dot U=AU+qg$, where $q=h^{-2}e_1$. The first unknown-only row has diagonal $-2/h^2$ and upper entry $1/h^2$. The last row evaluates $2(U_{N-1}-U_N)/h^2$. For the separate zero Dirichlet--Dirichlet baseline (DD), we drop the last unknown and use the ordinary tridiagonal operator.
+
+Integrating over one time step $k$ and evaluating the right-hand side at its left endpoint gives forward-time central-space (FTCS). Using the trapezoidal rule in time gives Crank--Nicolson (CN) \cite{leveque,cn}.
+\begin{align}
+U^{m+1}&=U^m+k(AU^m+qg^m),\\
+(I-kA/2)U^{m+1}&=(I+kA/2)U^m+\tfrac{k}{2}q(g^m+g^{m+1}).
+\end{align}
+Both are single-step methods starting directly from $U^0$. We take $k=T/M$ with integer $M$ so every comparison lands at the same time. CN includes both known surface values. The update and boundary terms are assembled explicitly, and SciPy's sparse direct LU factors the CN system once per run. The factorisation applies to a fixed tridiagonal matrix and introduces no iterative stopping tolerance. The source checks the update against an independently evaluated dense residual.
+
+Central differences have an $O(h^2)$ interior residual for smooth data. At the symmetry plane the leading correction to $b_{\xi\xi}$ is $-h b_{\xi\xi\xi}/3$. For the smooth constant-coefficient solutions used to verify order, differentiating $b_\xi(1,\tau)=0$ in time and using the PDE gives $b_{\xi\xi\xi}(1,\tau)=0$. Under these smoothness conditions, the consistency orders are $O(h^2+k)$ for FTCS and $O(h^2+k^2)$ for CN. Homogeneous contraction bounds the accumulated updates on a fixed time interval.
+
+\subsection{Stability in the norm of the actual grid}
+Put $W=\operatorname{diag}(1,\ldots,1,1/2)$ and $\langle U,V\rangle_h=hU^TWV$. For homogeneous $U_0=0$, summation over the edges gives
+\begin{equation}\label{eq:energy}
+WA=A^TW,\qquad U^TWAU=-h^{-2}\sum_{j=0}^{N-1}(U_{j+1}-U_j)^2.
+\end{equation}
+The last half weight accounts for the half cell at the symmetry plane. Substituting $\sin(j\theta)$ gives $\theta_m=(2m-1)\pi/(2N)$ for the Dirichlet--Neumann (DN) problem. Its eigenvalues are $-4h^{-2}\sin^2(\theta_m/2)$. With $r=k/h^2$ the exact FTCS contraction limit is $r_{\rm DN}=1/[2\cos^2(\pi/(4N))]$. The DD result is $r_{\rm DD}=1/[2\cos^2(\pi/(2N))]$ from $\theta_m=m\pi/N$. The mesh-independent $r\leq1/2$ also guarantees nonnegative explicit stencil weights. The slightly larger finite-grid contraction limits concern the weighted norm.
+
+Writing $z=k\lambda\leq0$ gives $G_{\rm FTCS}=1+z$ and $G_{\rm CN}=(1+z/2)/(1-z/2)$. Since $|G_{\rm CN}|\leq1$, CN contracts homogeneous data and differences of solutions with the same forcing. In fact, for $V=(U^{m+1}+U^m)/2$, the energy difference divided by $2k$ is $\langle V,AV\rangle_h\leq0$, where the difference is taken between squared norms. A negative $G$ predicts sign alternation while $|G|$ governs growth.
+
+\clearpage
+\section{Periodic response and the first crossings}
+Write the settled field as $\operatorname{Im}\{H(\xi,\Omega)e^{i\Omega\tau}\}$. Equation \eqref{eq:ibvp} gives $H''=i\Omega H$, $H(0)=1$ and $H'(1)=0$. Solving these two boundary conditions yields
+\begin{equation}\label{eq:transfer}
+H(\xi,\Omega)=\frac{\cosh((1-\xi)\sqrt{i\Omega})}{\cosh(\sqrt{i\Omega})},\qquad
+a=|H|,\qquad \phase=-\arg H.
+\end{equation}
+With $s=1-\xi$, the series of $\log\cosh$ yields
+\begin{equation}
+\log H=-\tfrac{i}{2}(1-s^2)\Omega-\tfrac{1}{12}(1-s^4)\Omega^2+O(\Omega^3).
+\end{equation}
+At half-depth the lag is $3\Omega/8+O(\Omega^3)$ in radians, and the amplitude loss is $5\Omega^2/64+O(\Omega^4)$. A direct small-frequency check gives the same phase sign and coefficient. Substituting $H=1+i\Omega f+\cdots$ into the boundary problem gives $f''=1$, $f(0)=0$ and $f'(1)=0$, so $f=\xi^2/2-\xi$ and $f(1/2)=-3/8$.
+
+\subsection{Why the two roots are the first crossings}
+Use the standard infinite product for $\cosh z$ \cite{dlmf}, with $\beta_m=(m+1/2)\pi$ and $y_m=\Omega/\beta_m^2$. Each factor of $H$ is $(1+i s^2y_m)/(1+i y_m)$. Hence
+\begin{align}
+\log a&=\tfrac12\sum_{m\geq0}\log\!\left(\frac{1+s^4y_m^2}{1+y_m^2}\right),\\
+\phase&=\sum_{m\geq0}\left[\arctan y_m-\arctan(s^2y_m)\right].
+\end{align}
+For $0\leq s<1$ each log term decreases with positive frequency. Each lag term increases while $s y_m<1$, since the sign of its derivative is the sign of $(1-s^2)(1-s^2y_m^2)$. On $0\leq\Omega\leq1.1$, $y_m\leq 1.1/(\pi/2)^2<1$, so phase increases throughout the bracketing interval. The sum is bounded by $\Omega\sum\beta_m^{-2}=\Omega/2$ there, which rules out wrapping. The series and derivative series converge uniformly on that interval. Thus bracketed roots of the two continuous criteria in this interval are unique and first. The phase crossing occurs at amplitude $0.99577113$, a loss of only $0.42289\%$.
+
+\begin{table}[!ht]\centering
+\caption{First continuous crossings for the settled analytical response. Depth is measured from the surface. No grid or time step enters these values. The phase tolerance is reached first at each sampled depth.}
+\begin{tabular}{@{}rcc@{}}\toprule
+Depth $\xi$ & $\Omega$ at $5\degree$ lag & $\Omega$ at $5\%$ attenuation \\ \midrule
+0.25 & 0.40435326 & 0.99744983 \\
+0.50 & 0.23344870 & 0.83378493 \\
+0.75 & 0.18647473 & 0.80622991 \\
+1.00 & 0.17476947 & 0.80448861 \\
+\bottomrule\end{tabular}
+\end{table}
+
+\clearpage
+\section{Verification design}\label{sec:design}
+The verification has three independent comparisons. Smooth modes test spatial and temporal orders using continuous and same-grid semidiscrete references. Homogeneous high- and low-mode runs probe the two sides of the FTCS limit and test the CN energy estimate. Driven zero-start runs compare with the continuous transient series and with the settled harmonic response after a whole-grid cycle check. A growing stable mode, an energy increase beyond $10^{-12}$ in a homogeneous stable run, or an unexplained error of the wrong order would contradict the numerical claims. For the periodic fit, the whole-grid cycle difference must be below $10^{-8}$ and the fit must agree with the discrete phasor to $10^{-8}$.
+
+\subsection{Smooth reference and separated refinement}
+For the baseline $u_\tau=u_{\xi\xi}$ with zero values at both ends, $u(\xi,0)=\sin(\pi\xi)$ has exact solution $e^{-\pi^2\tau}\sin(\pi\xi)$. On $N=128$ intervals at $T=0.1$, FTCS ($r=0.4$) and CN ($k=10^{-3}$) both give $u(1/2,T)=0.3727$ to four decimal places. Their maximum whole-field errors are $\sci{2.59}{-5}$ and $\sci{1.55}{-5}$, below $10^{-3}$. The lowest compatible DN mode is $\sin(\pi\xi/2)$. Both shapes have continuous decay $e^{-\beta^2 T}$ and same-grid semidiscrete decay $e^{\lambda_h T}$ with their respective eigenvalues.
+
+All field errors use $\norm{e}=(h e^TWe)^{1/2}$ or $\lVert e\rVert_\infty=\max_j|e_j|$. For spatial order, vary $N=20,40,80,160$, set $T=0.1$ and use $k=0.005h^2$ (FTCS) or $0.2h^2$ (CN). Require the ratio of the measured temporal error to pure spatial error to stay below $10\%$. Its largest measured value was $3.00\%$. For temporal order, fix $N=40$ and compare only to the semidiscrete solution. Both DD and DN have spatial rates near two. The current diagnostic is the edge-midpoint error in $(U_{j+1}-U_j)/h$, measured in the edge $L^2$ norm. The physical conversion to $J_y$ is $-B_0/(\mu\ell)$ times the dimensionless gradient.
+
+\fig{verification}{Smooth DN mode at $T=0.1$. Panel a compares with the continuous field at $N=20,40,80,160$ with the stated spatial time steps. Panel b fixes $N=40$ and uses the same-grid exact evolution. Panel c uses panel a's runs and the exact gradient at edge midpoints. This checks the derivative entering the reconstructed current.}{fig:verify}
+
+On the two finest levels, the DN spatial order is $2.000$ for both methods. The measured temporal orders are $1.000$ for FTCS and $2.000$ for CN. The complete convergence tables with both error norms and the time-error contributions are in Appendix~\ref{app:results}.
+
+\clearpage
+\section{Results}
+\subsection{Tests of stability and forced fidelity}
+The homogeneous stability claim would fail if a mode grew inside the finite-grid bound, or if CN's homogeneous energy increased beyond $10^{-12}$. On a grid with $N=40$, the FTCS limits are $0.50077186$ for DD and $0.50019282$ for DN. We therefore use $r=0.49$ and $0.5001$ as controls and $r=0.51$ to force an actual violation. The initial modes are normalised to unit projected amplitude. All stable cases satisfied the energy criterion, and the signed amplitudes agreed with the predicted powers of $G$ to the checked tolerance.
+
+\fig{stability}{Homogeneous DN runs at $N=40$, $h=1/40$, $k=rh^2$ and $T=100k$. Each curve reports the absolute weighted projection onto its initial eigenvector, divided by the initial projection. The vertical scale is logarithmic. The highest mode reveals FTCS growth at $r=0.51$ even though the lowest mode decays on the same grid. CN high-mode signs alternate at $r=20$, and the amplitude decays.}{fig:stability}
+
+\begin{table}[!ht]\centering
+\caption{Signed multiplier $G$ and magnitude after 100 steps for representative tests at $N=40$. The reference for every row is its own exact discrete modal power.}
+\begin{tabular}{@{}llrrrr@{}}\toprule
+Boundary & Method & $r$ & Mode & $G$ & $|a_{100}|$ \\ \midrule
+DD & FTCS & 0.51 & Lowest & 0.996856 & 0.72984 \\
+DD & FTCS & 0.51 & Highest & $-1.036856$ & 37.311 \\
+DN & FTCS & 0.51 & Lowest & 0.999214 & 0.92435 \\
+DN & FTCS & 0.51 & Highest & $-1.039214$ & 46.826 \\
+DN & CN & 20 & Highest & $-0.951201$ & 0.006718 \\
+\bottomrule\end{tabular}
+\end{table}
+
+The time-domain forcing is checked against a continuous zero-initial-field solution. Lifting with $g(\tau)$ and expanding the remaining forced homogeneous problem in the DN eigenfunctions gives
+\begin{equation}\label{eq:transient}
+b(\xi,\tau)=\operatorname{Im}\{H e^{i\Omega\tau}\}+
+\sum_{m=0}^\infty\frac{2\Omega\beta_m}{\beta_m^4+\Omega^2}e^{-\beta_m^2\tau}\sin(\beta_m\xi).
+\end{equation}
+At $\Omega=1$, $T=0.1$ and $N=20,40,80$, using $k=0.4h^2$ for FTCS and $k=0.2h^2$ for CN gives approximately fourfold error reductions. At $N=80$ the weighted errors are $\sci{3.42}{-6}$ and $\sci{2.44}{-6}$. These finite-time tests also exercise both nonzero surface terms.
+
+\clearpage
+\subsection{Settled time-domain measurements}
+Each driven test starts from zero. Write $P=2\pi/\Omega$ and fit the last complete period to $c_s\sin(\Omega\tau)+c_c\cos(\Omega\tau)+c_0$. Its complex amplitude is $c_s+i c_c$. We require at least three cycles and a whole-grid same-phase difference below $10^{-8}$ in $L^2_h$. All nine runs settled in 3--7 cycles. The largest final cycle difference was $\sci{2.84}{-9}$. For the separate discrete harmonic reference, divide the phasor update by its forcing factor to solve $(s_k I-A)H_h=q$, where $s_k=(e^{i\Omega k}-1)/k$ for FTCS and $s_k=2i\tan(\Omega k/2)/k$ for CN. The semidiscrete symbol is $i\Omega$. The largest fitted versus discrete phasor difference was $\sci{8.13}{-10}$.
+
+\fig{response}{Phase lag and amplitude ratio at $\xi=0.5$. Curves are the continuous half-slab response. Circles are CN time-domain fits on $N=80$, $h=1/80$, with $k=P/2048$ and final time $T=cP$ for the first accepted cycle count $c\geq3$. Dashed lines are the stated tolerances and dotted vertical lines mark continuous crossings. The phase crosses its limit while attenuation remains small.}{fig:response}
+
+\begin{table}[!ht]\centering
+\caption{Representative fitted CN values at $\xi=0.5$. $N=80$, $h=1/80$, $k=P/2048$. All rows shown stop after $T=3P$. Phase is in degrees and amplitude is relative to the surface.}
+\begin{tabular}{@{}rrrrr@{}}\toprule
+$\Omega$ & Exact amplitude & Fit amplitude & Exact phase & Fit phase \\ \midrule
+0.100000 & 0.999220 & 0.999220 & 2.147340 & 2.147341 \\
+0.233449 & 0.995771 & 0.995771 & 5.000000 & 5.000002 \\
+0.300000 & 0.993047 & 0.993046 & 6.412236 & 6.412238 \\
+0.833785 & 0.950000 & 0.949997 & 17.234799 & 17.234751 \\
+1.000000 & 0.930472 & 0.930468 & 20.344709 & 20.344624 \\
+\bottomrule\end{tabular}
+\end{table}
+
+The FTCS checks at the two analytic frequencies used $N=40$, $k\leq0.4h^2$ and 107,659 and 30,143 steps per period. The respective amplitude errors were $\sci{1.47}{-6}$ and $\sci{1.61}{-5}$, and the phase errors in degrees were $\sci{8.23}{-6}$ and $\sci{3.38}{-4}$. The fitted histories and the independent harmonic system test the same steady response through different numerical paths. Agreement with the continuous reference measures the discretisation error.
+
+\clearpage
+\subsection{Error in the threshold decision}
+The time-domain observable is compared with continuous and discrete harmonic roots, because two nearly overlapping curves are insufficient to judge a small frequency error. A hidden transient or discretisation bias large enough to reverse the order of the two roots would contradict the main claim. The difference between continuous crossings is $0.60033622$. At $N=80$ the largest reported absolute frequency error is $\sci{3.65}{-5}$, much smaller than that difference. These are measured errors against the analytic reference for the stated model.
+
+\begin{table}[!ht]\centering
+\caption{First half-depth crossings. For each discrete row $N=80$ and $h=1/80$. Thresholds are computed from the settled harmonic response. FTCS uses $k=0.4h^2$, CN uses $k=P/2048$, and the semidiscrete row is exact in time.}
+\begin{tabular}{@{}lrrrr@{}}\toprule
+Reference or method & Phase root & Absolute error & Amplitude root & Absolute error \\ \midrule
+Continuous & 0.2334487021 & --- & 0.8337849256 & --- \\
+Semidiscrete & 0.2334487712 & $\sci{6.90}{-8}$ & 0.8337589217 & $\sci{2.60}{-5}$ \\
+FTCS & 0.2334486055 & $\sci{9.66}{-8}$ & 0.8338213352 & $\sci{3.64}{-5}$ \\
+CN & 0.2334485881 & $\sci{1.14}{-7}$ & 0.8337582678 & $\sci{2.67}{-5}$ \\
+\bottomrule\end{tabular}
+\end{table}
+
+\fig{thresholds}{Absolute frequency errors for both criteria at $\xi=1/2$. Panel a compares semidiscrete roots with continuous roots for $N=20,40,80,160$. Panel b fixes $N=80$, uses CN at 256--4096 steps per period and compares with the same-grid semidiscrete roots. The spatial and temporal error curves each show the expected factor-of-four reduction on doubling resolution.}{fig:thresholds}
+
+The combined CN phase error does not decrease monotonically at fixed 2048 steps per period. At $N=40$ its signed frequency error is about $+\sci{9.31}{-8}$, and at $N=80$ it is about $-\sci{1.14}{-7}$. A positive spatial shift and a negative temporal shift nearly cancel on the coarser grid. The separated comparisons in Figure \ref{fig:thresholds} expose the cancellation. This is a practical reason to inspect both biases before choosing a grid or judging a threshold from a single fit.
+
+For an illustrative slab with $\mu=4\pi\times10^{-7}$ H/m, $\sigma=5.8\times10^7$ S/m and $\ell=0.01$ m, the diffusion time is about $0.00729$ s. Under those assumed parameters the phase and attenuation thresholds correspond to about $5.10$ Hz and $18.21$ Hz. In the model the scaling is $f_c=\Omega_c/(2\pi\mu\sigma\ell^2)$, so doubling the half-thickness divides the physical threshold frequency by four.
+
+\clearpage
+\subsection{Cost at shared accuracy targets}
+We timed both solvers at the same final-field accuracy targets, $10^{-3}$ and $10^{-5}$, in $L^2_h$. The forced problem is fixed at $N=80$, $h=1/80$, $\Omega=1$, $T=2$ and zero initial field. Equation \eqref{eq:transient} is the reference. Using 48 and 96 terms returned identical floating-point reference values at this time. For each method the smallest passing step count among the candidates was timed five times, including matrix construction, factorisation where applicable, forcing and time stepping. Plotting and reference evaluation are excluded.
+
+\begin{table}[!ht]\centering
+\caption{Cost at shared error targets. The actual time step is $k=2/M$. Errors are final-field $L^2_h$ errors against the continuous startup series. Times are in milliseconds and are specific to this run.}
+\begin{tabular}{@{}llrrrr@{}}\toprule
+Target & Method & Steps $M$ & Field error & Median & Min--max \\ \midrule
+\input{results/timing_rows.tex}%
+\end{tabular}
+\end{table}
+
+At the tighter target the two achieved errors are close to $7\times10^{-6}$. CN takes 128 steps, while the least expensive tested stable FTCS run uses 25,600. The FTCS stability ceiling restricts its step even at the looser target. The shortlist is discrete, so the measured times describe these accepted configurations. They depend on the machine and solver interface. The cost experiment concerns a final field, while the fidelity experiment concerns phase at half-depth over a settled cycle.
+
+\fig{cost_accuracy}{Final-field error and step count at $N=80$, $h=1/80$, $\Omega=1$ and $T=2$. Each candidate uses $k=2/M$ and the continuous startup series as reference. Dashed lines show the common $L^2_h$ targets. The first passing tested configuration of each method is timed separately.}{fig:cost}
+
+\section{Interpretation and limitations}
+The slab assumes linear and constant material properties, an ideal surface drive, symmetry and one spatial dimension. Eddy-current Joule dissipation is represented. Hysteresis, laminations, anisotropy, temperature feedback, edge current return and machine geometry are outside the model. A fixed sensor delay would add lag proportional to frequency and could be confused with the leading low-frequency diffusion effect. Extending the numerical result to a real conductor therefore requires a calibrated timing reference and paired surface/interior measurements.
+
+\section{Reproducibility and claim audit}
+
+From the code archive, \texttt{python code/run\_all.py --check} runs the numerical checks and \texttt{python code/run\_all.py} regenerates the five figures and all numerical tables. Dependencies and file names are in \texttt{README.md}. The numerical experiments are deterministic except for wall-clock timing. The settings used here are Python 3.13, NumPy 2.5, SciPy 1.18 and Matplotlib 3.10. The material-use declaration and the decisions on the three checked claims are in Appendix~\ref{app:audit}. Appendix~\ref{app:results} records the full refinement tables and supporting derivations.
+
+\section{Conclusion}
+For this half-slab and these tolerances, the field first leaves the static regime through phase lag. The analytical transfer function explains the ordering, and the verified discretisations resolve the separation between the thresholds. Stability of CN permits large steps in the homogeneous problem, while trustworthy phase prediction still requires resolution checks. A decisive follow-up would measure both surface and half-depth magnetic signals on a characterised slab with phase calibration.
+
+\begin{thebibliography}{9}
+\bibitem{brief} Numerical PDEs course team. \emph{Project 3 Brief and Problem Pack. PDE Initial--Boundary Value Problems}. November 2026.
+\bibitem{haus} Haus, H. A. and Melcher, J. R. \emph{Electromagnetic Fields and Energy}, Ch. 10. Prentice Hall, 1989.
+\bibitem{leveque} LeVeque, R. J. \emph{Finite Difference Methods for Ordinary and Partial Differential Equations}. SIAM, 2007.
+\bibitem{cn} Crank, J. and Nicolson, P. A practical method for numerical evaluation of solutions of partial differential equations of the heat-conduction type. \emph{Proc. Cambridge Philos. Soc.} 43, 50--67 (1947).
+\bibitem{dlmf} NIST. \emph{Digital Library of Mathematical Functions}, Eq. 4.36.2, infinite product for the hyperbolic cosine. \url{https://dlmf.nist.gov/4.36.E2}.
+\end{thebibliography}
+\clearpage
+\appendix
+\section{AI transparency and claim audit}\label{app:audit}
+Codex assisted with the mathematical derivation, numerical code and checks, figures, and drafting of the supplied and revised versions. The three substantive claims below were checked by the specified mathematical or numerical routes.
+
+\paragraph{Mixed-boundary stability.} The possible error was to assume Euclidean symmetry. The weighted edge identity in Equation \eqref{eq:energy}, the discrete eigenvalue calculation and the high-mode energy experiment provided separate checks. The corrected weighted stability bound was retained for constant coefficients and the specified centre closure. Its conclusion concerns norm contraction.
+
+\paragraph{Phase and attenuation orders.} A sign error in the complex convention could change the phase conclusion. The perturbation boundary problem independently gives $f(1/2)=-3/8$, and the product representation verifies the sign and ordering on the crossing interval. The expansion was retained as a small-frequency result, and the finite-frequency values use the exact transfer function.
+
+\paragraph{Sensitivity of the crossings.} An early-time fit or a single resolution could shift a root. The zero-start time integrations were compared with a discrete harmonic solve following the cycle check. The continuous and semidiscrete controls separate the numerical shifts. The threshold ordering was retained for the declared tolerances and model.
+
+\clearpage
+\section{Individual contribution statements}
+\newcommand{\record}[2]{\def\membername{#1}\def\memberid{#2}\input{ics_member.tex}}
+\record{Shenghao Lin}{2363483}
+\clearpage
+\record{Davin Jonathan}{2365125}
+\clearpage
+\record{Jihong Zhuang}{2362142}
+\clearpage
+\record{Wosi Xie}{2362155}
+\clearpage
+\record{Yuhan Zhang}{2363574}
+\input{additional_results.tex}
+
+\end{document}

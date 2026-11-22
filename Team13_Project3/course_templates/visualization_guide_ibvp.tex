@@ -1,0 +1,277 @@
+% ============================================================
+% Visualization Guide for Project 3 (PDE IBVP)
+% Compile: tectonic -X compile visualization_guide_ibvp.tex
+% ============================================================
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=2.3cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{fontspec}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\setmainfont{Times New Roman}
+\newcommand{\e}[1]{{\emojifont #1}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5em}
+\renewcommand{\arraystretch}{1.3}
+\begin{document}
+\begin{center}
+  {\LARGE\bfseries Visualization Guide for Project 3 (PDE IBVP)}\\[0.4em]
+  {\large Companion to the heat and hyperbolic scaffolds}
+\end{center}
+\vspace{0.2em}
+\hrule
+\vspace{0.6em}
+
+The IBVP project produces four classes of figures: \textbf{time-series}
+(convergence + amplitude + energy drift), \textbf{heatmaps / colormaps}
+(space--time profiles, especially for diffusion and transport),
+\textbf{animations} (long-time wave / shock evolution), and the
+\textbf{cost--accuracy} plot that carries the module's efficiency outcome.
+This guide
+follows the same Rule 1--6 conventions as the ODE/BVP guides, with
+additions for time-evolution and shock-safe colour maps; Rule 7 is
+specific to Project 3, because this is the project on which learning
+outcome D is assessed.
+
+% ----------------------------------------------------------------------
+\section*{Rule 1 --- One claim per figure, with a captioned interpretation}
+
+Every figure has a \textbf{title} (the conclusion, not the content) and
+a \textbf{caption} that says what is shown \emph{and} why it matters.
+
+\begin{itemize}[leftmargin=2em, itemsep=1pt]
+  \item\textbf{Time-series (parabolic):}
+        title like \emph{``$L^2$ error decays at order 1.5 in time''};
+        axes $h$ (or $\Delta t$) and $L^2$ error; legend distinguishes schemes.
+  \item\textbf{Energy / amplitude (wave):}
+        title like \emph{``leapfrog conserves the staggered discrete energy
+        to roundoff over 100 periods (drift $3\times10^{-13}$)''};
+        axes time and $E^{n+1/2}/E^{1/2}$. Roundoff-scale conservation is
+        an implementation check, \emph{not} an accuracy statement: the gap
+        between the discrete and the continuous energy
+        $E=\tfrac12\int(u_t^2+c^2u_x^2)\,dx$ decreases at the scheme's
+        order in $h$, and is reported as a separate number.
+  \item\textbf{Heatmap (space--time):}
+        title like \emph{``heat smooths the kink''} (mass is \emph{not}
+        conserved under zero Dirichlet data --- the default sine solution
+        loses mass as it decays; claim conservation only with periodic or
+        no-flux boundaries, and include boundary fluxes in the mass-balance
+        diagnostic for open systems);
+        axes $x$ and $t$, colourmap \texttt{viridis} (NOT \texttt{jet}).
+  \item\textbf{Dispersion curve:}
+        title like \emph{``leapfrog phase speed lags at moderate $kh$''};
+        axes $kh$ and $\omega_h(k)/ck$, reference line $y=1$.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\section*{Rule 2 --- Colour maps that do not hide structure}
+
+\begin{itemize}[leftmargin=2em, itemsep=1pt]
+  \item For \textbf{heatmaps} use \texttt{viridis}, \texttt{plasma}, or
+        \texttt{coolwarm} (perceptually uniform; colour-blind safe).
+  \item For \textbf{diverging fields} (residual, signed error) use
+        \texttt{coolwarm} centred on zero; do not use \texttt{jet} (it
+        exaggerates differences and fails in print).
+  \item For \textbf{time-series} prefer \textbf{colour-blind-safe pairs}:
+        \texttt{tab:blue}/\texttt{tab:orange} or solid + dashed.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\section*{Rule 3 --- Reproduction card: the exact script + commit}
+
+Every reported number has a pinned commit and a one-line run command.
+\textit{Done} $=$ the command prints a line that matches the report
+within the stated \emph{diagnostic-specific} tolerance --- e.g.\ the
+fitted order within $\pm0.05$ of the reported slope, a conservation
+drift below the declared roundoff threshold, a PASS/FAIL verdict
+against the tolerance stated in the report --- not a universal digit
+count. Each skeleton is itself a runnable driver: after its TASKs are
+implemented, \texttt{python heat\_equation\_skeleton.py} prints the heat
+centre value with a PASS/FAIL verdict, and
+\texttt{python hyperbolic\_skeleton.py} prints the wave centre value with a
+PASS/FAIL verdict. The drivers check against the analytic solutions inside
+the files, so a reproduced number needs no instructor solution.
+
+% ----------------------------------------------------------------------
+\section*{Rule 4 --- Axes, units, legends, reproducibility}
+
+\begin{itemize}[leftmargin=2em, itemsep=1pt]
+  \item Every axis carries a unit: $h$ [m], $\Delta t$ [s], $x$ [m], $t$ [s], $T$ [K], ...
+  \item Every curve has a legend entry; lines that overlap are differentiated
+        by linestyle (solid / dashed / dotted) and marker.
+  \item Random seeds are fixed and recorded; the figure caption
+        states the seed.
+  \item Generated figures follow the module's single commit policy:
+        \textbf{final} figures that appear in the report (and the script
+        that produced them) are committed; intermediate or disposable
+        outputs (scratch plots, caches, old \texttt{.png} from earlier
+        runs) are not. Keep final figures in \texttt{figures/}, source in
+        \texttt{code/}; rebuild before committing so no stale output is
+        committed.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\section*{Rule 5 --- Fidelity diagnostics are the figure's spine}
+
+A fidelity figure is not \emph{``a picture of the solution''} but
+\emph{``a measurement of a property the continuous PDE has''} that a
+wrong method would break. Pick the diagnostic first, then design the run
+that produces it.
+
+\begin{itemize}[leftmargin=2em, itemsep=1pt]
+  \item\textbf{Parabolic:} maximum principle ($\min U \ge 0$, $\max U \le
+        \max U_0$) and a non-increasing discrete energy --- \emph{under the
+        data assumptions that guarantee them}, which you state explicitly
+        (e.g.\ non-negative initial data, no interior source, and boundary
+        data within the initial range; a dissipative boundary condition for
+        the energy); check them only on runs where those assumptions hold
+        --- plus a \emph{time-discrete} residual of the evolution
+        equation, e.g.\ for backward Euler
+        \[
+        \Big\|\frac{U^{n+1}-U^n}{\Delta t} - L_h U^{n+1} - f^{n+1}\Big\|_\infty,
+        \]
+        \emph{not} the elliptic residual $\|L_h U - f\|_\infty$, which can be
+        nonzero for an exact transient solution and would falsely flag a
+        solver defect. Test discretisation accuracy with an independent
+        reference or error diagnostic instead.
+  \item\textbf{Wave:} relative drift of the staggered discrete energy
+        $|E^{n+1/2} - E^{1/2}|/E^{1/2}$ over 100 periods (roundoff scale:
+        an implementation check, not accuracy), the discrete-to-continuous
+        gap $|E^{1/2} - E_{\mathrm{cont}}|$ decreasing at the scheme's
+        order in $h$ (for $u=\sin\pi x\cos\pi t$, $c=1$:
+        $E_{\mathrm{cont}}=\pi^2/4$), phase displacement per wavelength,
+        amplitude decay per period.
+  \item\textbf{Transport / conservation law:} weighted total mass
+        $M_h=\sum_j w_j U_j$, with the weights matched to what $U_j$
+        stores: cell widths or volumes when $U_j$ is a finite-volume cell
+        average, trapezoidal weights (half at the ends) when $U_j$ is a
+        nodal value on a suitable grid, and its change compared against
+        boundary fluxes and sources ---
+        $|M_h(t)-M_h(0)|$ alone rises legitimately on an open or forced
+        problem and would mislabel conservation; with periodic or no-flux
+        boundaries and no source it is the balance residual. Also: shock
+        position vs.\ analytic, TVD property (no new extrema), entropy
+        residual.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\section*{Rule 6 --- Time-evolution specifics for IBVP}
+
+The IBVP project stresses time-evolution. The list below is
+\emph{pathway-dependent}: apply the items that fit your PDE and scheme,
+and state which apply. A diffusion project has no dispersion curve, and
+a scheme whose \emph{unconditional stability for this operator has been
+established} (state the method, the discrete operator, and the
+assumptions, e.g.\ backward Euler or Crank--Nicolson for the heat
+equation $u_t = u_{xx}$ with $L_h$ the symmetric negative-semidefinite
+discretisation of $\partial_{xx}$ appearing in the Rule 5 residual) has
+no stability boundary to sweep; a wave or transport project must not
+omit its energy/mass and phase diagnostics.
+
+\begin{itemize}[leftmargin=2em, itemsep=1pt]
+  \item\textbf{Log--log refinement plot} for the observed order:
+        $L^2$ error vs $h$ (or $\Delta t$) on log--log axes; fit a
+        straight line, record the slope $\pm$ standard error.
+        \emph{(All pathways.)}
+  \item\textbf{Energy (or mass) drift plot} for waves / transport:
+        $E^{n+1/2}/E^{1/2}$ or $M_h(t)/M_h(0)$ vs $t$ on a \emph{linear}
+        $y$-axis (so a 1\% drift is visible) and, when the ratio stays
+        positive, a \emph{log} $y$ panel (so exponential behaviour is
+        visible). If the reference value vanishes ($E^{1/2}=0$ or
+        $M_h(0)=0$) the ratio is undefined --- plot the absolute drift
+        $|E^{n+1/2}-E^{1/2}|$ or $M_h(t)$ itself instead. Two panels, one
+        figure. \emph{(Wave and transport pathways.)}
+  \item\textbf{Dispersion relation} $\omega_h(k)$ vs analytic
+        $\omega(k)=ck$ for at least 4 $k$ values spanning the resolvable
+        range; the offset per wavelength is the report's number.
+        \emph{(Wave pathway --- an advection or heat project may instead
+        report a phase-displacement or decay measurement; derive what
+        applies.)}
+  \item\textbf{Stability-boundary sweep} for the topic's analysis:
+        run just below and just above the predicted bound, record the
+        measured amplification at the most-dangerous mode.
+        \emph{(Only for a scheme whose stability is conditional --- a
+        derived bound exists to sweep, e.g.\ explicit FTCS or leapfrog at
+        the relevant $r$ or CFL value. A scheme whose unconditional
+        stability for this operator has been established, stated with its
+        assumptions, has no boundary to sweep.)}
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\section*{Rule 7 --- Cost--accuracy evidence (Learning Outcome D)}
+
+Project 3 is where the module's efficiency outcome (LO D: reflect on
+computational efficiency in terms of cost and accuracy) is assessed, so one
+figure or table must carry it. \emph{Accuracy alone is not the claim; the
+claim is accuracy bought per unit of work.}
+
+\begin{itemize}[leftmargin=2em, itemsep=1pt]
+  \item\textbf{Cost--accuracy plot:} $x$-axis = cost, $y$-axis = achieved
+        error, one curve per scheme, both reaching the \emph{same} accuracy
+        target. A second panel with a log $y$-axis makes the asymptotic
+        separation visible; a single linear panel is acceptable when only
+        two operating points are compared.
+  \item\textbf{Name the cost measure} and use it consistently: wall-clock
+        time [s] (per \texttt{time.perf\_counter} around the solve only,
+        \emph{excluding} figure generation and I/O), iteration count for an
+        iterative solve, or operation count (e.g.\ one matvec $=O(N)$ per
+        step). Wall-clock is machine-dependent --- state the machine and
+        repeat timing runs, or report iteration/operation counts alongside it.
+  \item\textbf{Match the accuracy target} before comparing cost: an explicit
+        scheme run at a smaller $\Delta t$ ``wins'' on error only because it
+        was given more work. Either fix the target error and report the cost
+        each scheme needs to reach it, or plot the whole error-vs-cost curve
+        and read the comparison off the curves.
+  \item\textbf{State what you did \emph{not} count} (setup, factorisation,
+        precomputation, figure rendering) and hold it constant across schemes.
+  \item\textbf{The honest negative result is still a result.} ``Scheme A
+        reaches $10^{-4}$ in 0.8\,s while scheme B needs 3.1\,s, so A is
+        cheaper \emph{for this problem and this target}'' is a complete LO D
+        answer; a claim of ``A is more efficient'' with no measured cost is not.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\section*{Time-series vs heatmap vs animation: which to use when}
+
+\begin{tabular}{@{}p{0.25\linewidth}p{0.30\linewidth}p{0.38\linewidth}@{}}
+\toprule
+\textbf{Story you want to tell} & \textbf{Best figure} & \textbf{Why} \\
+\midrule
+``The error decays at order $p$'' & log--log refinement & slope $=$ order; cited in the report \\
+``The method damps / oscillates / preserves the wave'' & $E(t)/E(0)$ vs $t$ & visible on a linear $y$ \\
+``The shock is at the right place and right height'' & $u(x,T)$ profile (line + overlay) & compares to analytic Riemann \\
+``Long-time behaviour is stable'' & animation (MP4 / GIF) + drift plot & animation shows motion; the companion drift plot turns ``stable'' into a number \\
+``This scheme buys accuracy more cheaply'' & error vs.\ cost at a matched accuracy target & turns LO D into a measured number instead of an assertion \\
+``Stability boundary at $r=1/2$ holds / breaks'' & blow-up montage + amplification & one figure, one claim \\
+\bottomrule
+\end{tabular}
+
+% ----------------------------------------------------------------------
+\section*{The ``what is wrong with this figure'' checklist}
+
+Before you commit a figure, scan it for these common failures:
+\begin{itemize}[leftmargin=2em, itemsep=1pt]
+  \item Rainbow / jet colormap on a heatmap $\to$ \textbf{change to
+        \texttt{viridis}} (perceptually uniform, print-safe).
+  \item Smooth sine that decays through zero on a linear $y$-axis $\to$
+        its signed values cannot go on a $\log$ axis (which has no zero
+        and discards negative data); plot the positive envelope
+        $\max_x|u(x,t)|$ (or the $\|u(\cdot,t)\|_2$ norm) on $\log y$ to
+        expose the decay, and keep the signed trace on the linear axis.
+  \item Title says ``solution'' or ``result'' $\to$ \textbf{rewrite} the
+        title as the conclusion, e.g.\ \emph{``$L^2$ error is
+        $O(h^{1.97})$ for CN''}.
+  \item Caption only describes what's on the figure $\to$ \textbf{add
+        the why-it-matters} line: \emph{``the slope matches the second
+        order of Crank--Nicolson in time''}.
+  \item Animation has no time scale / axis label $\to$ add a frame
+        counter and the time stamp; the reader must be able to read
+        the evolution.
+  \item Stale \texttt{.png} from an earlier commit $\to$ rebuild before
+        committing; \texttt{run\_all.py} regenerates everything.
+\end{itemize}
+
+\end{document}

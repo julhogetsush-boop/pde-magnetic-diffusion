@@ -1,0 +1,147 @@
+% ============================================================
+% Submission Checklist — Project 3 (PDE IBVP), end of project (Tutorial 13)
+% Compile: tectonic -X compile submission_checklist_ibvp.tex
+% ============================================================
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=2.3cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5em}
+
+\begin{document}
+
+\begin{center}
+  {\LARGE\bfseries Submission Checklist}\\[0.4em]
+  {\large Project 3 (PDE IBVP) --- End of Project (Tutorial 13)}
+\end{center}
+\vspace{0.2em}
+\hrule
+\vspace{0.6em}
+
+Go through this checklist in the last tutorial \emph{before} submitting. The
+instructor runs the same checks on a fresh machine.
+
+% ============================================================
+\subsection*{The three-part submission package}
+% ============================================================
+\begin{itemize}[leftmargin=2.4em, itemsep=1pt]
+  \item[$\square$] \textbf{Team report} --- PDF, $\geq$ 8 pages, including the
+  team AI Transparency Log and one labelled ICS per member as appendices
+  \item[$\square$] \textbf{Code} --- zip archive with a README
+  \item[$\square$] \textbf{Slides} --- PDF, one set for the scheduled presentation wave
+\end{itemize}
+
+% ============================================================
+\subsection*{Report checks}
+% ============================================================
+\begin{itemize}[leftmargin=2.4em, itemsep=1pt]
+  \item[$\square$] Title page with team number, member names, and student IDs
+  \item[$\square$] Structure is sensible, e.g.\ following the template:
+    Background $\to$ Model $\to$ Schemes $\to$ Stability $\to$ Fidelity $\to$
+    Conclusions
+  \item[$\square$] Complete IBVP stated: PDE, domain, coefficients, units or
+    nondimensionalisation, initial data, boundary data, compatibility
+    assumptions, and the quantity of interest
+  \item[$\square$] Two schemes derived from the PDE, including
+    boundary enforcement and start-up for multistep methods; a citation may
+    support a derivation but does not replace it; any library call is
+    separately justified and shown to do what you claim on this problem
+  \item[$\square$] Every figure has a caption saying what is shown AND why it matters
+  \item[$\square$] Every claim has support (figure, table, or code output)
+  \item[$\square$] A stability argument matched to your chosen pathway (von
+    Neumann, matrix/energy, or conservation/entropy) stated with its
+    assumptions; an experiment capable of \emph{contradicting} it was run
+    and the outcome reported (a disagreement is investigated ---
+    implementation, measurement, or assumption --- not asserted away)
+  \item[$\square$] \emph{If your scheme is Crank--Nicolson:}
+    sign-alternation ($G \to -1$) correctly diagnosed as a bounded
+    oscillation, \emph{not} instability. Where the chosen investigation
+    suppresses the early transient, its remedy (e.g.\ a Rannacher
+    start-up with a stated tolerance) is documented --- suppression,
+    not elimination (the sign alternation of the stiffest surviving
+    mode remains); a team whose finding is the oscillation itself
+    reports it without adding a remedy. Implicit is not automatically
+    unconditionally stable: state the method, discrete operator, and
+    assumptions for which that status is established (e.g.\ backward
+    Euler or Crank--Nicolson for the heat equation $u_t = u_{xx}$ with
+    $L_h$ symmetric negative semidefinite); only then has the scheme no
+    stability boundary to cross; a conservation-law project checks the
+    entropy condition instead --- the checklist item is conditional on
+    the pathway, not universal
+  \item[$\square$] \emph{Separated} refinements: spatial order at a fixed tiny
+    $\Delta t$ (or a stated, justified error-separation protocol); temporal
+    order at a fixed fine grid --- \emph{not} diagonal refinement; what is
+    fixed is stated
+  \item[$\square$] At least one PDE-specific fidelity diagnostic, quantified:
+    decay/positivity (diffusion), mass or total variation (transport), or
+    energy/phase (waves)
+  \item[$\square$] One smooth reference test and one deliberately stressful
+    test (nonsmooth data, long time, high frequency, or a parameter limit)
+  \item[$\square$] A test capable of contradicting the stability claim was
+    run and its outcome reported: show the failure case if one occurred
+    (blow-up, oscillation, or a violated bound), otherwise report the
+    stress test's supporting outcome with the diagnostic shown
+  \item[$\square$] Your numbers are checked against your own constructed oracle
+    (analytic solution, a second independent scheme, or a conserved quantity)
+    --- and you state which
+  \item[$\square$] Cost measure stated and reported (LO D): the two schemes
+    compared at a \emph{matched} accuracy target, with the cost named (wall-clock
+    time, iteration count, or operation count) and measured, not asserted
+  \item[$\square$] All tables/figures state method, $h$, $\Delta t$, final
+    time, norm/diagnostic, and reference
+  \item[$\square$] Limitations include discretisation, modelling/domain, and
+    computational limitations
+  \item[$\square$] AI Transparency Log present: two or three significant claim
+    audits include assumptions, risk/falsifier, independent evidence, decision,
+    and limitations (or an explicit declaration that no AI was used)
+  \item[$\square$] Team-owned methods and trusted library interfaces are identified
+  \item[$\square$] ICS included: each member's specific contributions, traceable to git
+  \item[$\square$] References cited where standard results are used
+\end{itemize}
+
+% ============================================================
+\subsection*{Code checks (run on a machine with dependencies installed)}
+% ============================================================
+\begin{itemize}[leftmargin=2.4em, itemsep=1pt]
+  \item[$\square$] \texttt{python code/run\_all.py} regenerates every figure in the report
+  \item[$\square$] README gives environment setup plus one command for tests
+    and one for the reported outputs
+  \item[$\square$] No absolute paths that break on another machine; no caches,
+    auxiliary files, or secrets included
+  \item[$\square$] The model's operators, initial data, and boundary data are
+    separable (not hard-coded together), so the scheme is reusable
+  \item[$\square$] Multistep start-up step is implemented and correct
+  \item[$\square$] Seeds fixed for any random elements
+  \item[$\square$] Generated figures are reproducible (no stale \texttt{.png} from an old run)
+  \item[$\square$] \texttt{.gitignore} excludes \texttt{.venv/}, \texttt{\_\_pycache\_\_/},
+    build artifacts
+\end{itemize}
+
+% ============================================================
+\subsection*{Slides checks}
+% ============================================================
+\begin{itemize}[leftmargin=2.4em, itemsep=1pt]
+  \item[$\square$] One PDF set for the scheduled presentation wave
+  \item[$\square$] The deck tells the full story arc (background $\to$ model $\to$ schemes $\to$ stability/fidelity $\to$ conclusions)
+  \item[$\square$] Each slide has a takeaway, not just bullet points
+  \item[$\square$] Presentation fits the time limit (10 min + 3 min Q\&A)
+\end{itemize}
+
+% ============================================================
+\subsection*{Last sanity question}
+% ============================================================
+\begin{quote}
+If you were the instructor, would this submission convince you?
+
+If not, what is the weakest link --- and can you fix it in the next 30 minutes?
+\end{quote}
+Fix that first. A half-finished verification section is the most common reason
+a project grade drops; a stability claim made outside its assumptions is the
+second.
+
+\medskip
+Final reproducer/name/date: \hrulefill
+
+\end{document}

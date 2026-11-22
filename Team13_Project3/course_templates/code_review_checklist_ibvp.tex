@@ -1,0 +1,20 @@
+\documentclass[11pt]{article}\usepackage[a4paper,margin=2cm]{geometry}\usepackage{enumitem,amssymb}
+\title{Project 3 Code Review Checklist}\author{}\date{}
+\begin{document}\maketitle
+Reviewer/team: \hrulefill
+\begin{itemize}[leftmargin=*]
+\item[$\square$] Grid coordinates, $h$, periodic endpoint convention, and array shapes are explicit.
+\item[$\square$] Initial values and every boundary condition are enforced at the correct time level; compatibility is discussed.
+\item[$\square$] Spatial-operator signs and advection upwind direction agree with the PDE.
+\item[$\square$] Multistep start-up and final-time handling retain the claimed order or disclose the exception.
+\item[$\square$] Sparse matrices/factorisations are reused where appropriate; solver failures and tolerances are checked.
+\item[$\square$] Exact/reference solution is evaluated at the same physical time and grid points.
+\item[$\square$] Norm scaling is correct; mass, energy, or total variation uses the stated grid convention.
+\item[$\square$] Space and time refinements are separated and observed orders are computed from actual refinement ratios.
+\item[$\square$] Stability tests excite the dangerous mode and avoid overflow being mistaken for evidence.
+\item[$\square$] One-step hand test, constant/known-mode test, and regression test pass.
+\item[$\square$] Results are regenerated from configuration, not hard-coded; randomness is seeded.
+\item[$\square$] AI-assisted code/claims have a named independent check in the Claim Audit.
+\end{itemize}
+Highest-priority issue and acceptance test: \vspace{2cm}
+\end{document}

@@ -1,0 +1,42 @@
+\clearpage
+\section{Additional derivations and results}\label{app:results}
+\subsection{Weighted flux identity}
+Set $U_0=0$ and $d_j=U_{j+1}-U_j$. The interior rows have $h^2(AU)_j=d_j-d_{j-1}$ for $j=1,\ldots,N-1$. The symmetry row has $h^2(AU)_N=-2d_{N-1}$. Inserting the endpoint weight gives
+\begin{equation}
+h^2 U^TWAU=\sum_{j=1}^{N-1}U_j(d_j-d_{j-1})-U_Nd_{N-1}=-\sum_{j=0}^{N-1}d_j^2.
+\end{equation}
+For CN with homogeneous data, $U^{m+1}-U^m=kAV$ with $V=(U^{m+1}+U^m)/2$. Pairing both sides with $2V$ in the weighted inner product gives the change in squared norm directly from the flux identity.
+
+\subsection{Zero-start series coefficient}
+Subtracting the settled field from $b$ gives a homogeneous mixed-boundary transient with initial condition $-\operatorname{Im}H$. Let $I_m=\int_0^1H(\xi,\Omega)\sin(\beta_m\xi)\,d\xi$. Integration by parts twice in $H''=i\Omega H$ gives $(\beta_m^2+i\Omega)I_m=\beta_m$, since $H(0)=1$, $H'(1)=0$ and $\cos\beta_m=0$. The sine has squared $L^2$ norm $1/2$. Thus the coefficient of $-\operatorname{Im}H$ is $-2\operatorname{Im}I_m=2\Omega\beta_m/(\beta_m^4+\Omega^2)$, yielding Equation \eqref{eq:transient} after multiplication by $e^{-\beta_m^2\tau}$.
+
+\begin{table}[!ht]\centering
+\caption{Full spatial refinement for DD and DN at $T=0.1$, with $h=1/N$. Field errors compare with the continuous smooth mode. The last column is temporal error divided by pure spatial error in $L^2_h$, measured with the same-grid semidiscrete reference. Rates are successive $L^2_h$ orders.}
+\small
+\begin{tabular}{@{}llrrrrrr@{}}\toprule
+Boundary & Method & $N$ & $k$ & $L^2_h$ & $L^\infty$ & Order & Time/space (\%) \\ \midrule
+\input{results/spatial_rows.tex}%
+\end{tabular}
+\end{table}
+
+\clearpage
+\subsection{Full time refinement and harmonic crossings}
+The temporal comparison evolves on one fixed grid. The semidiscrete reference contains the same spatial discretisation as the solver, so comparing with it isolates the time stepping error. The harmonic comparison below uses the first continuous roots in Section 3 as its reference.
+
+\begin{table}[!ht]\centering
+\caption{Full temporal refinement for DD and DN at $N=40$, $h=1/40$ and $T=0.1$. Errors are relative to the exact semidiscrete mode. Rates use successive $L^2_h$ errors.}
+\small
+\begin{tabular}{@{}llrrrrr@{}}\toprule
+Boundary & Method & $N$ & $k$ & $L^2_h$ & $L^\infty$ & Order \\ \midrule
+\input{results/temporal_rows.tex}%
+\end{tabular}
+\end{table}
+
+\begin{table}[!ht]\centering
+\caption{Full half-depth threshold comparison for $h=1/N$. $P=2\pi/\Omega$ is the forcing period. Values use settled harmonic systems, with reference roots $0.2334487021$ and $0.8337849256$. SD denotes exact evolution in time on the spatial grid.}
+\small
+\begin{tabular}{@{}lrlllll@{}}\toprule
+Method & $N$ & Step $k$ & Phase root & Amplitude root & Phase error & Amplitude error \\ \midrule
+\input{results/crossings_rows.tex}%
+\end{tabular}
+\end{table}
